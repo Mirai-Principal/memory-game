@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:todo_app/flip_card_3d.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'dart:math';
 
 class MemoryCard {
   final int id;
-  final int number;
+  final String iconString;
   bool isFlipped;
   bool isMatched;
 
   MemoryCard({
     required this.id,
-    required this.number,
+    required this.iconString,
     this.isFlipped = false,
     this.isMatched = false,
   });
@@ -31,6 +32,18 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   int attempts = 0;
   int? bestScore;
 
+  void _playSound(String fileName) async {
+    try {
+      final player = AudioPlayer();
+      await player.play(AssetSource('sounds/$fileName'));
+      player.onPlayerComplete.listen((event) {
+        player.dispose();
+      });
+    } catch (e) {
+      debugPrint("Error playing sound: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -39,18 +52,33 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
 
   void _initializeGame() {
     attempts = 0;
-    // Usaremos un grid de 3 columnas x 4 filas (12 cartas = 6 pares)
-    List<int> numbers = [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6];
-    numbers.shuffle(Random());
+    
+    // Pool of available emojis
+    List<String> emojiPool = [
+      '🦊', '🐼', '🐸', '🦄', '🐲', '🐙',
+      '🦁', '🐯', '🐵', '🐷', '🐧', '🦉',
+      '🍎', '🍉', '🍌', '🍓', '🥑', '🍔',
+      '🍕', '🚀', '🛸', '🏎️', '⚽', '🏀',
+      '💎', '👻', '👽', '👾', '🤖', '🎃'
+    ];
+    
+    // Shuffle the pool and pick the first 6
+    emojiPool.shuffle(Random());
+    List<String> selectedEmojis = emojiPool.take(6).toList();
+    
+    // Create the pairs
+    List<String> gameEmojis = [...selectedEmojis, ...selectedEmojis];
+    gameEmojis.shuffle(Random());
 
     cards = List.generate(
       12,
-      (index) => MemoryCard(id: index, number: numbers[index]),
+      (index) => MemoryCard(id: index, iconString: gameEmojis[index]),
     );
   }
 
   void _checkGameOver() {
     if (cards.every((c) => c.isMatched)) {
+      _playSound('win.wav');
       // Game over!
       bool isNewBest = false;
       if (bestScore == null || attempts < bestScore!) {
@@ -65,29 +93,36 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
         barrierDismissible: false,
         builder: (context) {
           return AlertDialog(
+            backgroundColor: const Color(0xFF2D2D44),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: isNewBest 
-              ? const Text('¡NUEVO RÉCORD!', textAlign: TextAlign.center, style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 24))
-              : const Text('¡Juego Completado!', textAlign: TextAlign.center),
+              ? const Text('¡NUEVO RÉCORD!', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF00FFCB), fontWeight: FontWeight.w900, fontSize: 24))
+              : const Text('¡JUEGO COMPLETADO!', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (isNewBest)
-                  const Icon(Icons.emoji_events, color: Colors.amber, size: 60),
+                  const Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 60),
                 const SizedBox(height: 16),
-                Text('Intentos: $attempts', style: const TextStyle(fontSize: 18)),
+                Text('Intentos: $attempts', style: const TextStyle(fontSize: 18, color: Colors.white)),
                 if (!isNewBest && bestScore != null)
-                  Text('Mejor récord: $bestScore', style: const TextStyle(fontSize: 16, color: Colors.grey)),
+                  Text('Mejor récord: $bestScore', style: const TextStyle(fontSize: 16, color: Colors.white54)),
                 if (isNewBest)
                   const Padding(
                     padding: EdgeInsets.only(top: 8.0),
-                    child: Text('¡Felicidades, mejoraste tu marca!', textAlign: TextAlign.center, style: TextStyle(color: Colors.green)),
+                    child: Text('¡Felicidades, mejoraste tu marca!', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF00FFCB))),
                   ),
               ],
             ),
             actions: [
               Center(
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF007F),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  ),
                   onPressed: () {
                     Navigator.of(context).pop();
                     setState(() {
@@ -96,7 +131,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
                       _initializeGame();
                     });
                   },
-                  child: const Text('Jugar de nuevo'),
+                  child: const Text('JUGAR DE NUEVO', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -109,6 +144,8 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   void _onCardTap(MemoryCard card) async {
     // Si estamos procesando un par, o si la carta ya está volteada o emparejada, no hacemos nada.
     if (isProcessing || card.isFlipped || card.isMatched) return;
+
+    _playSound('flip.wav');
 
     setState(() {
       card.isFlipped = true;
@@ -124,7 +161,8 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
         attempts++;
       });
 
-      if (firstSelectedCard!.number == secondCard.number) {
+      if (firstSelectedCard!.iconString == secondCard.iconString) {
+        _playSound('match.wav');
         // Coinciden! Esperamos un momento para que el usuario vea el número y luego desaparecen.
         await Future.delayed(const Duration(milliseconds: 600));
         if (mounted) {
@@ -137,6 +175,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
           _checkGameOver();
         }
       } else {
+        _playSound('error.wav');
         // No coinciden. Esperamos un poco y las regresamos a su estado original.
         await Future.delayed(const Duration(milliseconds: 1500));
         if (mounted) {
@@ -154,13 +193,22 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueGrey[50],
+      backgroundColor: const Color(0xFF12121E), // Dark modern game background
       appBar: AppBar(
-        title: const Text('Memory Game'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'MEMORY MATCH',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2,
+          ),
+        ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () {
               setState(() {
                 firstSelectedCard = null;
@@ -180,14 +228,14 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
               children: [
                 Column(
                   children: [
-                    const Text('Intentos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
-                    Text('$attempts', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+                    const Text('INTENTOS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white54, letterSpacing: 1.2)),
+                    Text('$attempts', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Color(0xFF00FFCB))),
                   ],
                 ),
                 Column(
                   children: [
-                    const Text('Mejor Récord', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
-                    Text(bestScore == null ? '-' : '$bestScore', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.orangeAccent)),
+                    const Text('RÉCORD', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white54, letterSpacing: 1.2)),
+                    Text(bestScore == null ? '-' : '$bestScore', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Color(0xFFFF007F))),
                   ],
                 ),
               ],
@@ -208,7 +256,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
                   return FlipCard3D(
                     isFlipped: cards[index].isFlipped,
                     isMatched: cards[index].isMatched,
-                    number: cards[index].number,
+                    iconString: cards[index].iconString,
                     onTap: () => _onCardTap(cards[index]),
                   );
                 },

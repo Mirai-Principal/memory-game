@@ -4,14 +4,14 @@ import 'dart:math';
 class FlipCard3D extends StatefulWidget {
   final bool isFlipped;
   final bool isMatched;
-  final int number;
+  final String iconString;
   final VoidCallback onTap;
 
   const FlipCard3D({
     super.key,
     required this.isFlipped,
     required this.isMatched,
-    required this.number,
+    required this.iconString,
     required this.onTap,
   });
 
@@ -82,35 +82,41 @@ class _FlipCard3DState extends State<FlipCard3D> {
   Widget _buildFrontCard() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.blueAccent,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4))
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
         ],
       ),
       alignment: Alignment.center,
-      child: const Icon(Icons.help_outline, color: Colors.white, size: 48),
+      child: const Icon(Icons.videogame_asset, color: Colors.white54, size: 48),
     );
   }
 
   Widget _buildBackCard() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.orangeAccent,
+        color: const Color(0xFF2D2D44),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF00FFCB), width: 2),
         boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4))
+          BoxShadow(
+            color: Color(0x4400FFCB),
+            blurRadius: 12,
+            offset: Offset(0, 0),
+          ),
         ],
       ),
       alignment: Alignment.center,
-      child: Text(
-        '${widget.number}',
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 48,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+      child: Text(widget.iconString, style: const TextStyle(fontSize: 80)),
     );
   }
 }
@@ -124,13 +130,17 @@ class StarEffect extends StatefulWidget {
   State<StarEffect> createState() => _StarEffectState();
 }
 
-class _StarEffectState extends State<StarEffect> with SingleTickerProviderStateMixin {
+class _StarEffectState extends State<StarEffect>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
     _controller.forward().then((_) {
       widget.onComplete();
     });
@@ -152,12 +162,16 @@ class _StarEffectState extends State<StarEffect> with SingleTickerProviderStateM
           children: List.generate(6, (index) {
             final angle = (2 * pi / 6) * index;
             // Distancia de las estrellas al centro que va aumentando
-            final radius = _controller.value * 50; 
+            final radius = _controller.value * 50;
             return Transform.translate(
               offset: Offset(cos(angle) * radius, sin(angle) * radius),
               child: Opacity(
                 opacity: 1.0 - _controller.value,
-                child: const Icon(Icons.star, color: Colors.amber, size: 36),
+                child: const Icon(
+                  Icons.star_rounded,
+                  color: Color(0xFFFFD700),
+                  size: 40,
+                ),
               ),
             );
           }),
