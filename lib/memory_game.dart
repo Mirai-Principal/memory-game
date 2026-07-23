@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:todo_app/flip_card_3d.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
+
+enum GameDifficulty { easy, medium, hard }
 
 class MemoryCard {
   final int id;
@@ -18,7 +21,8 @@ class MemoryCard {
 }
 
 class MemoryGameScreen extends StatefulWidget {
-  const MemoryGameScreen({super.key});
+  final GameDifficulty difficulty;
+  const MemoryGameScreen({super.key, required this.difficulty});
 
   @override
   State<MemoryGameScreen> createState() => _MemoryGameScreenState();
@@ -30,7 +34,9 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   MemoryCard? firstSelectedCard;
   
   int attempts = 0;
-  int? bestScore;
+  static Map<GameDifficulty, int> bestScores = {};
+  
+  int? get bestScore => bestScores[widget.difficulty];
 
   void _playSound(String fileName) async {
     try {
@@ -47,7 +53,23 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   @override
   void initState() {
     super.initState();
+    _loadBestScores();
     _initializeGame();
+  }
+
+  Future<void> _loadBestScores() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      if (prefs.containsKey('bestScore_easy')) {
+        bestScores[GameDifficulty.easy] = prefs.getInt('bestScore_easy')!;
+      }
+      if (prefs.containsKey('bestScore_medium')) {
+        bestScores[GameDifficulty.medium] = prefs.getInt('bestScore_medium')!;
+      }
+      if (prefs.containsKey('bestScore_hard')) {
+        bestScores[GameDifficulty.hard] = prefs.getInt('bestScore_hard')!;
+      }
+    });
   }
 
   void _initializeGame() {
@@ -62,16 +84,21 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
       '💎', '👻', '👽', '👾', '🤖', '🎃'
     ];
     
-    // Shuffle the pool and pick the first 6
+    // Shuffle the pool
     emojiPool.shuffle(Random());
-    List<String> selectedEmojis = emojiPool.take(6).toList();
+    
+    int pairCount = 6; // Default to Easy
+    if (widget.difficulty == GameDifficulty.medium) pairCount = 8;
+    if (widget.difficulty == GameDifficulty.hard) pairCount = 10;
+    
+    List<String> selectedEmojis = emojiPool.take(pairCount).toList();
     
     // Create the pairs
     List<String> gameEmojis = [...selectedEmojis, ...selectedEmojis];
     gameEmojis.shuffle(Random());
 
     cards = List.generate(
-      12,
+      pairCount * 2,
       (index) => MemoryCard(id: index, iconString: gameEmojis[index]),
     );
   }
@@ -84,7 +111,12 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
       if (bestScore == null || attempts < bestScore!) {
         isNewBest = true;
         setState(() {
-          bestScore = attempts;
+          bestScores[widget.difficulty] = attempts;
+        });
+        
+        // Guardar el nuevo récord en SharedPreferences
+        SharedPreferences.getInstance().then((prefs) {
+          prefs.setInt('bestScore_${widget.difficulty.name}', attempts);
         });
       }
 
@@ -205,6 +237,10 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
             letterSpacing: 2,
           ),
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         centerTitle: true,
         actions: [
           IconButton(
@@ -245,11 +281,11 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3, // 3 columnas (grid de 3x4)
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: widget.difficulty == GameDifficulty.easy ? 3 : 4, 
                   mainAxisSpacing: 16.0,
                   crossAxisSpacing: 16.0,
-                  childAspectRatio: 0.7, // Ajuste para que las cartas se vean verticales
+                  childAspectRatio: widget.difficulty == GameDifficulty.hard ? 0.8 : 0.7, 
                 ),
                 itemCount: cards.length,
                 itemBuilder: (context, index) {

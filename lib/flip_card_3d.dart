@@ -116,7 +116,7 @@ class _FlipCard3DState extends State<FlipCard3D> {
         ],
       ),
       alignment: Alignment.center,
-      child: Text(widget.iconString, style: const TextStyle(fontSize: 80)),
+      child: Text(widget.iconString, style: const TextStyle(fontSize: 50)),
     );
   }
 }
