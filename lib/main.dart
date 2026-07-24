@@ -1,11 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:todo_app/home_screen.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: HomeScreen(),
-  ));
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final audioContext = AudioContext(
+    iOS: AudioContextIOS(
+      category: AVAudioSessionCategory.ambient,
+      options: {AVAudioSessionOptions.mixWithOthers},
+    ),
+    android: AudioContextAndroid(
+      isSpeakerphoneOn: false,
+      stayAwake: false,
+      contentType: AndroidContentType.sonification,
+      usageType: AndroidUsageType.game,
+      audioFocus: AndroidAudioFocus.none,
+    ),
+  );
+  AudioPlayer.global.setAudioContext(audioContext);
+  runApp(
+    const MaterialApp(
+      title: 'Memory Match',
+      debugShowCheckedModeBanner: false,
+      home: HomeScreen(),
+    ),
+  );
 }
 
 class CustomText extends StatelessWidget {
@@ -23,5 +43,3 @@ class CustomText extends StatelessWidget {
     );
   }
 }
-
-
