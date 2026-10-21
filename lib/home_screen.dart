@@ -7,92 +7,106 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF12121E), // Mismo fondo oscuro
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.psychology,
-              size: 100,
-              color: Color(0xFF00FFCB),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'MEMORY MATCH',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 32,
-                letterSpacing: 3,
+      backgroundColor: const Color(0xFF005DAA),
+      body: SafeArea(
+        top: false,
+        bottom: true,
+        child: SizedBox.expand(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/inicio.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const SizedBox.shrink();
+                  },
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Selecciona la dificultad',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 16,
+              SafeArea(
+                bottom: false,
+                child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                        minWidth: constraints.maxWidth,
+                      ),
+                      child: SizedBox(
+                        width: constraints.maxWidth,
+                        child: IntrinsicHeight(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Spacer(flex: 4),
+                                _buildPlayButton(context),
+                                const SizedBox(height: 48),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-            ),
-            const SizedBox(height: 50),
-            _buildDifficultyButton(
-              context,
-              'FÁCIL (3x4)',
-              const Color(0xFF00FFCB),
-              GameDifficulty.easy,
-            ),
-            const SizedBox(height: 20),
-            _buildDifficultyButton(
-              context,
-              'MEDIO (4x4)',
-              const Color(0xFFFFD700),
-              GameDifficulty.medium,
-            ),
-            const SizedBox(height: 20),
-            _buildDifficultyButton(
-              context,
-              'DIFÍCIL (4x5)',
-              const Color(0xFFFF007F),
-              GameDifficulty.hard,
             ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildDifficultyButton(
-    BuildContext context, 
-    String text, 
-    Color color, 
-    GameDifficulty difficulty,
-  ) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.black, // Texto oscuro para mayor contraste en botones neón
-        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+  Widget _buildPlayButton(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(50),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFF97CA6), // Lighter pink top
+            Color(0xFFE23887), // Richer magenta pink bottom
+          ],
         ),
-        minimumSize: const Size(250, 50),
-        elevation: 5,
-        shadowColor: color.withOpacity(0.5),
-      ),
-      onPressed: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => MemoryGameScreen(difficulty: difficulty),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFE23887).withValues(alpha: 0.4),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
-        );
-      },
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.5,
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(50),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const MemoryGameScreen(difficulty: GameDifficulty.easy),
+              ),
+            );
+          },
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+            child: Text(
+              'Jugar ¡ahora!',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.0,
+              ),
+            ),
+          ),
         ),
       ),
     );

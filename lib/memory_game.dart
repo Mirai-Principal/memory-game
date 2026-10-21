@@ -225,7 +225,8 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF12121E), // Dark modern game background
+      backgroundColor: const Color(0xFF005DAA),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -235,6 +236,13 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
             color: Colors.white,
             fontWeight: FontWeight.w900,
             letterSpacing: 2,
+            shadows: [
+              Shadow(
+                color: Colors.black54,
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
           ),
         ),
         leading: IconButton(
@@ -255,52 +263,90 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
           )
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Column(
-                  children: [
-                    const Text('INTENTOS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white54, letterSpacing: 1.2)),
-                    Text('$attempts', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Color(0xFF00FFCB))),
-                  ],
+      body: SafeArea(
+        top: false,
+        bottom: true,
+        child: SizedBox.expand(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/fondo_juego.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const SizedBox.shrink();
+                  },
                 ),
-                Column(
-                  children: [
-                    const Text('RÉCORD', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white54, letterSpacing: 1.2)),
-                    Text(bestScore == null ? '-' : '$bestScore', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Color(0xFFFF007F))),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: widget.difficulty == GameDifficulty.easy ? 3 : 4, 
-                  mainAxisSpacing: 16.0,
-                  crossAxisSpacing: 16.0,
-                  childAspectRatio: widget.difficulty == GameDifficulty.hard ? 0.8 : 0.7, 
-                ),
-                itemCount: cards.length,
-                itemBuilder: (context, index) {
-                  return FlipCard3D(
-                    isFlipped: cards[index].isFlipped,
-                    isMatched: cards[index].isMatched,
-                    iconString: cards[index].iconString,
-                    onTap: () => _onCardTap(cards[index]),
-                  );
-                },
+              ),
+              SafeArea(
+                bottom: false,
+                child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            children: [
+                              const Text('INTENTOS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 1.2)),
+                              Text('$attempts', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Color(0xFF00FFCB))),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            children: [
+                              const Text('RÉCORD', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 1.2)),
+                              Text(bestScore == null ? '-' : '$bestScore', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Color(0xFFFF007F))),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: GridView.builder(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: widget.difficulty == GameDifficulty.easy ? 3 : 4, 
+                          mainAxisSpacing: 16.0,
+                          crossAxisSpacing: 16.0,
+                          childAspectRatio: widget.difficulty == GameDifficulty.hard ? 0.8 : 0.7, 
+                        ),
+                        itemCount: cards.length,
+                        itemBuilder: (context, index) {
+                          return FlipCard3D(
+                            isFlipped: cards[index].isFlipped,
+                            isMatched: cards[index].isMatched,
+                            iconString: cards[index].iconString,
+                            onTap: () => _onCardTap(cards[index]),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
