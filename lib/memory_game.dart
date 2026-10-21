@@ -324,9 +324,9 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
                       child: GridView.builder(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: widget.difficulty == GameDifficulty.easy ? 3 : 4, 
-                          mainAxisSpacing: 16.0,
-                          crossAxisSpacing: 16.0,
-                          childAspectRatio: widget.difficulty == GameDifficulty.hard ? 0.8 : 0.7, 
+                          mainAxisSpacing: 14.0,
+                          crossAxisSpacing: 14.0,
+                          childAspectRatio: 1.0, 
                         ),
                         itemCount: cards.length,
                         itemBuilder: (context, index) {

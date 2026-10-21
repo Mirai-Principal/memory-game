@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app/front_card.dart';
 import 'dart:math';
 
 class FlipCard3D extends StatefulWidget {
@@ -80,43 +81,28 @@ class _FlipCard3DState extends State<FlipCard3D> {
   }
 
   Widget _buildFrontCard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black45,
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: const Icon(Icons.videogame_asset, color: Colors.white54, size: 48),
-    );
+    return const FrontCard();
   }
 
   Widget _buildBackCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF2D2D44),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF00FFCB), width: 2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x4400FFCB),
-            blurRadius: 12,
-            offset: Offset(0, 0),
-          ),
-        ],
+    return AspectRatio(
+      aspectRatio: 1.0,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF1B2A40),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xFF00FFCB), width: 2.2),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x5500FFCB),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: Text(widget.iconString, style: const TextStyle(fontSize: 48)),
       ),
-      alignment: Alignment.center,
-      child: Text(widget.iconString, style: const TextStyle(fontSize: 50)),
     );
   }
 }
