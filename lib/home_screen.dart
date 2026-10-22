@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:todo_app/memory_game.dart';
+import 'package:memory_game/memory_game.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

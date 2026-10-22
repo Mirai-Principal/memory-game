@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:todo_app/home_screen.dart';
-import 'package:todo_app/flip_card_3d.dart';
+import 'package:memory_game/home_screen.dart';
+import 'package:memory_game/flip_card_3d.dart';
+import 'package:memory_game/memory_game.dart';
 
 void main() {
   testWidgets('Memory Match smoke test', (WidgetTester tester) async {
@@ -67,5 +68,32 @@ void main() {
     );
     expect(containerFinder, findsWidgets);
   });
+
+  testWidgets('Ver consejos button navigates to ConsejosScreen', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: MemoryGameScreen(difficulty: GameDifficulty.easy),
+      ),
+    );
+
+    // Verify button exists below the grid
+    final consejosButton = find.text('Ver consejos');
+    expect(consejosButton, findsOneWidget);
+
+    // Tap the button
+    await tester.tap(consejosButton);
+    await tester.pumpAndSettle();
+
+    // Verify we are on ConsejosScreen
+    expect(find.text('CONSEJOS'), findsOneWidget);
+
+    // Tap back button
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    // Back on MemoryGameScreen
+    expect(find.text('Ver consejos'), findsOneWidget);
+  });
 }
+
 

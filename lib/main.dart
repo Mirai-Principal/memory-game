@@ -1,24 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:todo_app/home_screen.dart';
+import 'package:memory_game/home_screen.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final audioContext = AudioContext(
-    iOS: AudioContextIOS(
-      category: AVAudioSessionCategory.ambient,
-      options: {AVAudioSessionOptions.mixWithOthers},
-    ),
-    android: AudioContextAndroid(
-      isSpeakerphoneOn: false,
-      stayAwake: false,
-      contentType: AndroidContentType.sonification,
-      usageType: AndroidUsageType.game,
-      audioFocus: AndroidAudioFocus.none,
-    ),
-  );
-  AudioPlayer.global.setAudioContext(audioContext);
+  try {
+    final audioContext = AudioContext(
+      iOS: AudioContextIOS(
+        category: AVAudioSessionCategory.playback,
+        options: {AVAudioSessionOptions.mixWithOthers},
+      ),
+      android: AudioContextAndroid(
+        isSpeakerphoneOn: false,
+        stayAwake: false,
+        contentType: AndroidContentType.sonification,
+        usageType: AndroidUsageType.game,
+        audioFocus: AndroidAudioFocus.none,
+      ),
+    );
+    AudioPlayer.global.setAudioContext(audioContext);
+  } catch (e) {
+    debugPrint("Error configurando audioContext: $e");
+  }
+
   runApp(
     const MaterialApp(
       title: 'Memory Match',
