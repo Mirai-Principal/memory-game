@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:memory_game/flip_card_3d.dart';
 import 'package:memory_game/consejos_screen.dart';
+import 'package:memory_game/mensaje.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:math';
-
-enum GameDifficulty { easy, medium, hard }
 
 class MemoryCard {
   final int id;
@@ -21,8 +20,7 @@ class MemoryCard {
 }
 
 class MemoryGameScreen extends StatefulWidget {
-  final GameDifficulty difficulty;
-  const MemoryGameScreen({super.key, required this.difficulty});
+  const MemoryGameScreen({super.key});
 
   @override
   State<MemoryGameScreen> createState() => _MemoryGameScreenState();
@@ -89,74 +87,33 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
 
       showDialog(
         context: context,
-        barrierDismissible: false,
+        barrierDismissible: true,
         builder: (context) {
-          return AlertDialog(
-            backgroundColor: const Color(0xFF2D2D44),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+          return const Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            insetPadding: EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 24.0,
             ),
-            title: const Text(
-              '¡JUEGO COMPLETADO!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFF00FFCB),
-                fontWeight: FontWeight.w900,
-                fontSize: 24,
-              ),
+            child: Mensaje(
+              title: '¡Reto completado!',
+              description:
+                  'Encontraste las 6 figuras, comparte lo aprendido con tu familia.',
+              imageAsset: 'assets/images/reto_completado.png',
+              buttonText: 'Salir',
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(
-                  Icons.emoji_events,
-                  color: Color(0xFFFFD700),
-                  size: 60,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  '¡Felicidades! Has encontrado todas las figuras.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF007F),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 12,
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    setState(() {
-                      firstSelectedCard = null;
-                      isProcessing = false;
-                      _initializeGame();
-                    });
-                  },
-                  child: const Text(
-                    'JUGAR DE NUEVO',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
           );
         },
-      );
+      ).then((_) {
+        if (mounted) {
+          setState(() {
+            firstSelectedCard = null;
+            isProcessing = false;
+            _initializeGame();
+          });
+        }
+      });
     }
   }
 
@@ -210,26 +167,6 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF005DAA),
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: () {
-              setState(() {
-                firstSelectedCard = null;
-                isProcessing = false;
-                _initializeGame();
-              });
-            },
-          ),
-        ],
-      ),
       body: SafeArea(
         top: false,
         bottom: true,
@@ -251,30 +188,30 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
                 bottom: false,
                 child: Column(
                   children: [
-                    const SizedBox(height: 4),
                     _buildGameHeader(),
-                    const SizedBox(height: 6),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 30.0),
                         child: GridView.builder(
+                          padding: EdgeInsets.zero,
                           gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount:
-                                widget.difficulty == GameDifficulty.easy
-                                    ? 3
-                                    : 4,
-                            mainAxisSpacing: 14.0,
-                            crossAxisSpacing: 14.0,
-                            childAspectRatio: 1.0,
-                          ),
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                mainAxisSpacing: 10.0,
+                                crossAxisSpacing: 10.0,
+                                childAspectRatio: 1.0,
+                              ),
                           itemCount: cards.length,
                           itemBuilder: (context, index) {
-                            return FlipCard3D(
-                              isFlipped: cards[index].isFlipped,
-                              isMatched: cards[index].isMatched,
-                              iconString: cards[index].iconString,
-                              onTap: () => _onCardTap(cards[index]),
+                            return FractionallySizedBox(
+                              widthFactor: 0.9,
+                              heightFactor: 0.9,
+                              child: FlipCard3D(
+                                isFlipped: cards[index].isFlipped,
+                                isMatched: cards[index].isMatched,
+                                iconString: cards[index].iconString,
+                                onTap: () => _onCardTap(cards[index]),
+                              ),
                             );
                           },
                         ),
@@ -296,7 +233,12 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
 
   Widget _buildGameHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
+      padding: const EdgeInsets.only(
+        left: 16.0,
+        right: 16.0,
+        top: 100.0,
+        bottom: 20.0,
+      ),
       child: Column(
         children: [
           // JUEGA Y APRENDE a cuidar a tu familia

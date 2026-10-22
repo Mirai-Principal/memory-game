@@ -4,6 +4,7 @@ import 'package:memory_game/home_screen.dart';
 import 'package:memory_game/flip_card_3d.dart';
 import 'package:memory_game/memory_game.dart';
 import 'package:memory_game/consejos_screen.dart';
+import 'package:memory_game/mensaje.dart';
 
 void main() {
   testWidgets('Memory Match smoke test', (WidgetTester tester) async {
@@ -81,7 +82,7 @@ void main() {
   testWidgets('Ver consejos button navigates to ConsejosScreen', (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: MemoryGameScreen(difficulty: GameDifficulty.easy),
+        home: MemoryGameScreen(),
       ),
     );
 
@@ -123,6 +124,82 @@ void main() {
 
     // Verify 'Volver al juego' button is present
     expect(find.text('Volver al juego'), findsOneWidget);
+  });
+
+  testWidgets('Mensaje widget renders title, description and actions', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Mensaje(
+            title: '¡Reto completado!',
+            description: 'Encontraste las 6 figuras, comparte\nlo aprendido con tu familia.',
+            actions: [
+              ElevatedButton(
+                onPressed: () {},
+                child: const Text('Jugar de nuevo'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('¡Reto completado!'), findsOneWidget);
+    expect(
+      find.text('Encontraste las 6 figuras, comparte\nlo aprendido con tu familia.'),
+      findsOneWidget,
+    );
+    expect(find.text('Jugar de nuevo'), findsOneWidget);
+  });
+
+  testWidgets('Mensaje displays properly in dialog with reto_completado image', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const Dialog(
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      child: Mensaje(
+                        title: '¡Reto completado!',
+                        description:
+                            'Encontraste las 6 figuras, comparte lo aprendido con tu familia.',
+                        imageAsset: 'assets/images/reto_completado.png',
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Show Dialog'),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Show Dialog'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Mensaje), findsOneWidget);
+    expect(find.text('¡Reto completado!'), findsOneWidget);
+    expect(
+      find.text('Encontraste las 6 figuras, comparte lo aprendido con tu familia.'),
+      findsOneWidget,
+    );
+    // Verify default Salir button is present
+    expect(find.text('Salir'), findsOneWidget);
+
+    // Tap Salir to dismiss
+    await tester.tap(find.text('Salir'));
+    await tester.pumpAndSettle();
+
+    // Dialog is dismissed
+    expect(find.byType(Mensaje), findsNothing);
   });
 }
 
