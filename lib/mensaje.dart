@@ -63,6 +63,12 @@ class Mensaje extends StatelessWidget {
   /// Espaciado vertical entre cada sección
   final double spacing;
 
+  /// Espaciado superior sobre la imagen
+  final double imageTopSpacing;
+
+  /// Espaciado inferior bajo la imagen
+  final double imageBottomSpacing;
+
   const Mensaje({
     super.key,
     this.title = '¡Reto completado!',
@@ -72,7 +78,7 @@ class Mensaje extends StatelessWidget {
     this.descriptionStyle,
     this.imageAsset,
     this.imageWidget,
-    this.imageHeight = 160.0,
+    this.imageHeight = 200.0,
     this.imageWidth,
     this.imageFit = BoxFit.contain,
     this.borderColor = const Color(0xFFFCC04C), // Ámbar/amarillo cálido
@@ -86,6 +92,8 @@ class Mensaje extends StatelessWidget {
     this.onButtonPressed,
     this.actions,
     this.spacing = 16.0,
+    this.imageTopSpacing = 0.0,
+    this.imageBottomSpacing = 0.0,
   });
 
   /// Muestra el mensaje como un diálogo/alerta modal en pantalla
@@ -98,7 +106,7 @@ class Mensaje extends StatelessWidget {
     TextStyle? descriptionStyle,
     String? imageAsset,
     Widget? imageWidget,
-    double imageHeight = 160.0,
+    double imageHeight = 200.0,
     double? imageWidth,
     BoxFit imageFit = BoxFit.contain,
     Color borderColor = const Color(0xFFFCC04C),
@@ -112,6 +120,9 @@ class Mensaje extends StatelessWidget {
     String? buttonText = 'Salir',
     VoidCallback? onButtonPressed,
     List<Widget>? actions,
+    double spacing = 16.0,
+    double imageTopSpacing = 0.0,
+    double imageBottomSpacing = 0.0,
     bool barrierDismissible = true,
     Color barrierColor = const Color(0x80000000),
   }) {
@@ -145,6 +156,9 @@ class Mensaje extends StatelessWidget {
             buttonText: buttonText,
             onButtonPressed: onButtonPressed,
             actions: actions,
+            spacing: spacing,
+            imageTopSpacing: imageTopSpacing,
+            imageBottomSpacing: imageBottomSpacing,
           ),
         );
       },
@@ -219,13 +233,14 @@ class Mensaje extends StatelessWidget {
 
               // 2. Imagen central
               if (renderedImage != null) ...[
-                SizedBox(height: spacing),
+                SizedBox(height: imageTopSpacing),
                 renderedImage,
+                SizedBox(height: imageBottomSpacing),
               ],
 
               // 3. Descripción
               if (description != null && description!.isNotEmpty) ...[
-                SizedBox(height: spacing),
+                if (renderedImage == null) SizedBox(height: spacing),
                 Text(
                   description!,
                   textAlign: TextAlign.center,
