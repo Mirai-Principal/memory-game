@@ -28,8 +28,14 @@ void main() {
     await tester.tap(find.text('Jugar ¡ahora!'));
     await tester.pumpAndSettle();
 
-    // Verify home screen is popped/pushed and game screen is active
+    // Verify home screen is popped/pushed and welcome dialog is active
     expect(find.text('Jugar ¡ahora!'), findsNothing);
+    expect(find.text('¡Activa tu memoria!'), findsOneWidget);
+    expect(find.text('Empezar'), findsOneWidget);
+
+    // Tap Empezar to begin playing
+    await tester.tap(find.text('Empezar'));
+    await tester.pumpAndSettle();
 
     // Verify new game header text and pair counter
     expect(find.text('Figuras encontradas: 0 de 6'), findsOneWidget);
@@ -85,6 +91,13 @@ void main() {
         home: MemoryGameScreen(),
       ),
     );
+
+    // Dismiss welcome dialog if present
+    await tester.pumpAndSettle();
+    if (find.text('Empezar').evaluate().isNotEmpty) {
+      await tester.tap(find.text('Empezar'));
+      await tester.pumpAndSettle();
+    }
 
     // Verify button exists below the grid
     final consejosButton = find.text('Ver consejos');
@@ -200,6 +213,44 @@ void main() {
 
     // Dialog is dismissed
     expect(find.byType(Mensaje), findsNothing);
+  });
+
+  testWidgets('Tapping Salir on Mensaje dialog returns to HomeScreen', (WidgetTester tester) async {
+    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+
+    // Tap play
+    await tester.tap(find.text('Jugar ¡ahora!'));
+    await tester.pumpAndSettle();
+    expect(find.byType(MemoryGameScreen), findsOneWidget);
+
+    // Welcome dialog appears on entering game screen
+    expect(find.text('¡Activa tu memoria!'), findsOneWidget);
+    expect(find.text('Empezar'), findsOneWidget);
+
+    // Tap Empezar to begin game
+    await tester.tap(find.text('Empezar'));
+    await tester.pumpAndSettle();
+
+    // Show completion dialog by matching all cards
+    final dynamic state = tester.state(find.byType(MemoryGameScreen));
+    for (var card in state.cards) {
+      card.isMatched = true;
+    }
+    state.setState(() {});
+    state.checkGameOver();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Mensaje), findsOneWidget);
+    expect(find.text('¡Reto completado!'), findsOneWidget);
+
+    // Tap Salir
+    await tester.tap(find.text('Salir'));
+    await tester.pumpAndSettle();
+
+    // Verify we are back on HomeScreen
+    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.text('Jugar ¡ahora!'), findsOneWidget);
+    expect(find.byType(MemoryGameScreen), findsNothing);
   });
 }
 

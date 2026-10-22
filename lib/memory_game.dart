@@ -23,13 +23,16 @@ class MemoryGameScreen extends StatefulWidget {
   const MemoryGameScreen({super.key});
 
   @override
-  State<MemoryGameScreen> createState() => _MemoryGameScreenState();
+  State<MemoryGameScreen> createState() => MemoryGameScreenState();
 }
 
-class _MemoryGameScreenState extends State<MemoryGameScreen> {
+class MemoryGameScreenState extends State<MemoryGameScreen> {
   List<MemoryCard> cards = [];
   bool isProcessing = false;
   MemoryCard? firstSelectedCard;
+
+  @visibleForTesting
+  void checkGameOver() => _checkGameOver();
 
   int get matchedPairs => cards.where((c) => c.isMatched).length ~/ 2;
   int get totalPairs => cards.length ~/ 2;
@@ -50,6 +53,34 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   void initState() {
     super.initState();
     _initializeGame();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showWelcomeDialog();
+    });
+  }
+
+  void _showWelcomeDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return const Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: 20.0,
+            vertical: 24.0,
+          ),
+          child: Mensaje(
+            title: '¡Activa tu memoria!',
+            description:
+                'Encuentra las figuras y descubre consejos de cuidado.',
+            imageAsset: 'assets/images/empezar.png',
+            buttonText: 'Empezar',
+          ),
+        );
+      },
+    );
   }
 
   void _initializeGame() {
@@ -89,10 +120,10 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
         context: context,
         barrierDismissible: true,
         builder: (context) {
-          return const Dialog(
+          return Dialog(
             backgroundColor: Colors.transparent,
             elevation: 0,
-            insetPadding: EdgeInsets.symmetric(
+            insetPadding: const EdgeInsets.symmetric(
               horizontal: 20.0,
               vertical: 24.0,
             ),
@@ -102,6 +133,9 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
                   'Encontraste las 6 figuras, comparte lo aprendido con tu familia.',
               imageAsset: 'assets/images/reto_completado.png',
               buttonText: 'Salir',
+              onButtonPressed: () {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
             ),
           );
         },
