@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:memory_game/flip_card_3d.dart';
 import 'package:memory_game/consejos_screen.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
 
 enum GameDifficulty { easy, medium, hard }
@@ -34,10 +33,8 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   bool isProcessing = false;
   MemoryCard? firstSelectedCard;
 
-  int attempts = 0;
-  static Map<GameDifficulty, int> bestScores = {};
-
-  int? get bestScore => bestScores[widget.difficulty];
+  int get matchedPairs => cards.where((c) => c.isMatched).length ~/ 2;
+  int get totalPairs => cards.length ~/ 2;
 
   void _playSound(String fileName) async {
     try {
@@ -54,28 +51,10 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   @override
   void initState() {
     super.initState();
-    _loadBestScores();
     _initializeGame();
   }
 
-  Future<void> _loadBestScores() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      if (prefs.containsKey('bestScore_easy')) {
-        bestScores[GameDifficulty.easy] = prefs.getInt('bestScore_easy')!;
-      }
-      if (prefs.containsKey('bestScore_medium')) {
-        bestScores[GameDifficulty.medium] = prefs.getInt('bestScore_medium')!;
-      }
-      if (prefs.containsKey('bestScore_hard')) {
-        bestScores[GameDifficulty.hard] = prefs.getInt('bestScore_hard')!;
-      }
-    });
-  }
-
   void _initializeGame() {
-    attempts = 0;
-
     // Lista de imágenes de cartas del juego
     const List<String> cardImages = [
       'assets/images/img_cards/1.png',
@@ -107,19 +86,6 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   void _checkGameOver() {
     if (cards.every((c) => c.isMatched)) {
       _playSound('win.wav');
-      // Game over!
-      bool isNewBest = false;
-      if (bestScore == null || attempts < bestScore!) {
-        isNewBest = true;
-        setState(() {
-          bestScores[widget.difficulty] = attempts;
-        });
-
-        // Guardar el nuevo récord en SharedPreferences
-        SharedPreferences.getInstance().then((prefs) {
-          prefs.setInt('bestScore_${widget.difficulty.name}', attempts);
-        });
-      }
 
       showDialog(
         context: context,
@@ -130,52 +96,33 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            title: isNewBest
-                ? const Text(
-                    '¡NUEVO RÉCORD!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xFF00FFCB),
-                      fontWeight: FontWeight.w900,
-                      fontSize: 24,
-                    ),
-                  )
-                : const Text(
-                    '¡JUEGO COMPLETADO!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
+            title: const Text(
+              '¡JUEGO COMPLETADO!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF00FFCB),
+                fontWeight: FontWeight.w900,
+                fontSize: 24,
+              ),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isNewBest)
-                  const Icon(
-                    Icons.emoji_events,
-                    color: Color(0xFFFFD700),
-                    size: 60,
-                  ),
-                const SizedBox(height: 16),
-                Text(
-                  'Intentos: $attempts',
-                  style: const TextStyle(fontSize: 18, color: Colors.white),
+              children: const [
+                Icon(
+                  Icons.emoji_events,
+                  color: Color(0xFFFFD700),
+                  size: 60,
                 ),
-                if (!isNewBest && bestScore != null)
-                  Text(
-                    'Mejor récord: $bestScore',
-                    style: const TextStyle(fontSize: 16, color: Colors.white54),
+                SizedBox(height: 16),
+                Text(
+                  '¡Felicidades! Has encontrado todas las figuras.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
                   ),
-                if (isNewBest)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      '¡Felicidades, mejoraste tu marca!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Color(0xFF00FFCB)),
-                    ),
-                  ),
+                ),
               ],
             ),
             actions: [
@@ -229,14 +176,10 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
       isProcessing = true;
       MemoryCard secondCard = card;
 
-      setState(() {
-        attempts++;
-      });
-
       if (firstSelectedCard!.iconString == secondCard.iconString) {
         _playSound('match.wav');
-        // Coinciden! Esperamos un momento para que el usuario vea el número y luego desaparecen.
-        await Future.delayed(const Duration(milliseconds: 600));
+        // Coinciden! Esperamos un momento para que el usuario vea el resultado y luego desaparecen.
+        await Future.delayed(const Duration(milliseconds: 800));
         if (mounted) {
           setState(() {
             firstSelectedCard!.isMatched = true;
@@ -249,7 +192,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
       } else {
         _playSound('error.wav');
         // No coinciden. Esperamos un poco y las regresamos a su estado original.
-        await Future.delayed(const Duration(milliseconds: 1500));
+        await Future.delayed(const Duration(milliseconds: 500));
         if (mounted) {
           setState(() {
             firstSelectedCard!.isFlipped = false;
@@ -270,26 +213,10 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'MEMORY MATCH',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 2,
-            shadows: [
-              Shadow(
-                color: Colors.black54,
-                blurRadius: 4,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
-        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
@@ -324,93 +251,23 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
                 bottom: false,
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12.0,
-                        horizontal: 16.0,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.35),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              children: [
-                                const Text(
-                                  'INTENTOS',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white70,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                                Text(
-                                  '$attempts',
-                                  style: const TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w900,
-                                    color: Color(0xFF00FFCB),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.35),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              children: [
-                                const Text(
-                                  'RÉCORD',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white70,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                                Text(
-                                  bestScore == null ? '-' : '$bestScore',
-                                  style: const TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w900,
-                                    color: Color(0xFFFF007F),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    const SizedBox(height: 4),
+                    _buildGameHeader(),
+                    const SizedBox(height: 6),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: GridView.builder(
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount:
-                                    widget.difficulty == GameDifficulty.easy
+                            crossAxisCount:
+                                widget.difficulty == GameDifficulty.easy
                                     ? 3
                                     : 4,
-                                mainAxisSpacing: 14.0,
-                                crossAxisSpacing: 14.0,
-                                childAspectRatio: 1.0,
-                              ),
+                            mainAxisSpacing: 14.0,
+                            crossAxisSpacing: 14.0,
+                            childAspectRatio: 1.0,
+                          ),
                           itemCount: cards.length,
                           itemBuilder: (context, index) {
                             return FlipCard3D(
@@ -433,6 +290,66 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildGameHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
+      child: Column(
+        children: [
+          // JUEGA Y APRENDE a cuidar a tu familia
+          RichText(
+            textAlign: TextAlign.center,
+            text: const TextSpan(
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18.5,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.3,
+              ),
+              children: [
+                TextSpan(text: 'JUEGA Y APRENDE '),
+                TextSpan(
+                  text: 'a cuidar a tu familia',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Línea rosada
+          Container(
+            width: 58,
+            height: 4,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF06292),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Figuras encontradas: X de Y
+          Text(
+            'Figuras encontradas: $matchedPairs de $totalPairs',
+            style: const TextStyle(
+              color: Color(0xFF00B0FF),
+              fontSize: 17.5,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 3),
+          // Toca dos tarjetas y encuentra las iguales
+          const Text(
+            'Toca dos tarjetas y encuentra las iguales',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -58,7 +58,7 @@ class _FlipCard3DState extends State<FlipCard3D> {
       onTap: widget.onTap,
       child: TweenAnimationBuilder(
         tween: Tween<double>(begin: 0, end: widget.isFlipped ? 1 : 0),
-        duration: const Duration(milliseconds: 600),
+        duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
         builder: (context, double value, child) {
           bool isFront = value < 0.5;
