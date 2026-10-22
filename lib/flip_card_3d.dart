@@ -89,19 +89,35 @@ class _FlipCard3DState extends State<FlipCard3D> {
       aspectRatio: 1.0,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1B2A40),
+          color: const Color(0xFF80CBFA),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFF00FFCB), width: 2.2),
-          boxShadow: const [
+          border: Border.all(color: const Color(0xFFE2F4FE), width: 2.0),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x5500FFCB),
-              blurRadius: 10,
-              offset: Offset(0, 4),
+              color: const Color(0xFF002A50).withValues(alpha: 0.35),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        alignment: Alignment.center,
-        child: Text(widget.iconString, style: const TextStyle(fontSize: 48)),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFF0C5073), width: 2.2),
+            color: const Color(0xFF80CBFA),
+          ),
+          padding: const EdgeInsets.all(1.0),
+          alignment: Alignment.center,
+          child: widget.iconString.startsWith('assets/')
+              ? Image.asset(
+                  widget.iconString,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const SizedBox.shrink(),
+                )
+              : Text(widget.iconString, style: const TextStyle(fontSize: 48)),
+        ),
       ),
     );
   }

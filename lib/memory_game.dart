@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:todo_app/flip_card_3d.dart';
+import 'package:todo_app/consejos_screen.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
@@ -75,31 +76,31 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   void _initializeGame() {
     attempts = 0;
     
-    // Pool of available emojis
-    List<String> emojiPool = [
-      '🦊', '🐼', '🐸', '🦄', '🐲', '🐙',
-      '🦁', '🐯', '🐵', '🐷', '🐧', '🦉',
-      '🍎', '🍉', '🍌', '🍓', '🥑', '🍔',
-      '🍕', '🚀', '🛸', '🏎️', '⚽', '🏀',
-      '💎', '👻', '👽', '👾', '🤖', '🎃'
+    // Lista de imágenes de cartas del juego
+    const List<String> cardImages = [
+      'assets/images/img_cards/1.png',
+      'assets/images/img_cards/2.png',
+      'assets/images/img_cards/3.png',
+      'assets/images/img_cards/4.png',
+      'assets/images/img_cards/5.png',
+      'assets/images/img_cards/6.png',
     ];
     
-    // Shuffle the pool
-    emojiPool.shuffle(Random());
+    List<String> imagePool = List.from(cardImages);
+    imagePool.shuffle(Random());
     
-    int pairCount = 6; // Default to Easy
-    if (widget.difficulty == GameDifficulty.medium) pairCount = 8;
-    if (widget.difficulty == GameDifficulty.hard) pairCount = 10;
+    // 3x4 = 12 cartas = 6 pares
+    int pairCount = min(6, imagePool.length);
     
-    List<String> selectedEmojis = emojiPool.take(pairCount).toList();
+    List<String> selectedImages = imagePool.take(pairCount).toList();
     
-    // Create the pairs
-    List<String> gameEmojis = [...selectedEmojis, ...selectedEmojis];
-    gameEmojis.shuffle(Random());
+    // Crear los pares de cartas
+    List<String> gameImages = [...selectedImages, ...selectedImages];
+    gameImages.shuffle(Random());
 
     cards = List.generate(
       pairCount * 2,
-      (index) => MemoryCard(id: index, iconString: gameEmojis[index]),
+      (index) => MemoryCard(id: index, iconString: gameImages[index]),
     );
   }
 
@@ -340,6 +341,10 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
                       ),
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
+                    child: _buildVerConsejosButton(context),
+                  ),
                 ],
               ),
             ),
@@ -349,4 +354,52 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
     ),
   );
 }
+
+  Widget _buildVerConsejosButton(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(50),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFF97CA6), // Rosa claro superior
+            Color(0xFFE23887), // Rosa magenta inferior
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFE23887).withValues(alpha: 0.4),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(50),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const ConsejosScreen(),
+              ),
+            );
+          },
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 46, vertical: 14),
+            child: Text(
+              'Ver consejos',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

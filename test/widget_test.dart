@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo_app/home_screen.dart';
+import 'package:todo_app/flip_card_3d.dart';
 
 void main() {
   testWidgets('Memory Match smoke test', (WidgetTester tester) async {
@@ -27,4 +28,44 @@ void main() {
     // Verify home screen is popped/pushed and game screen is active
     expect(find.text('Jugar ¡ahora!'), findsNothing);
   });
+
+  testWidgets('FlipCard3D back displays image with 0xFF80CBFA background', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 100,
+              height: 100,
+              child: FlipCard3D(
+                isFlipped: true,
+                isMatched: false,
+                iconString: 'assets/images/img_cards/1.png',
+                onTap: () {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Let the flip animation finish
+    await tester.pumpAndSettle();
+
+    // Verify back card image is rendered
+    final cardImageFinder = find.byType(Image);
+    expect(cardImageFinder, findsOneWidget);
+    final cardImage = tester.widget<Image>(cardImageFinder);
+    expect((cardImage.image as AssetImage).assetName, 'assets/images/img_cards/1.png');
+
+    // Verify background color 0xFF80CBFA
+    final containerFinder = find.byWidgetPredicate(
+      (widget) =>
+          widget is Container &&
+          widget.decoration is BoxDecoration &&
+          (widget.decoration as BoxDecoration).color == const Color(0xFF80CBFA),
+    );
+    expect(containerFinder, findsWidgets);
+  });
 }
+
